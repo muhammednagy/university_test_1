@@ -1,13 +1,16 @@
-class GetRandomNumberResponse {
+import 'dart:convert';
+
+class RandomNumber {
   final String status;
   final int random;
 
-  GetRandomNumberResponse({this.status, this.random});
+  RandomNumber({this.status, this.random});
 
-  factory GetRandomNumberResponse.fromJson(Map<String, dynamic> json) {
-    return GetRandomNumberResponse(
+  factory RandomNumber.fromJson(Map<String, dynamic> json) {
+    return RandomNumber(
       status: json['status'] as String,
       random: json['random'] as int,
     );
   }
 }
+
