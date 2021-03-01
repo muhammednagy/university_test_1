@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:university_test_1/API/api.dart';
 import 'package:university_test_1/models/API.dart';
@@ -56,20 +57,38 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
   Future<RandomNumber> futureNumber = fetchRandomNumber();
+
   var previousRandomNumbers = new List();
 
-  void _incrementCounter() {
+  bool isLoading = false;
+  void _setLoading(bool state) {
     setState(() {
-      futureNumber = fetchRandomNumber();
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      isLoading = state;
     });
+  }
+  void _getNewRandomNumber() async {
+    // SharedPreferences prefs = await SharedPreferences.getInstance();
+    // List<String> savedStrList = prefs.getStringList('previousRandomNumbers');
+    // List<int> previousRandomNumbers = savedStrList.map((i) => int.parse(i)).toList();
+
+    setState(() {
+      if (futureNumber != null) {
+        futureNumber.then((value) => {
+          if (value != null && value.random != null) {
+            previousRandomNumbers.add(value.random),
+            _addValueToPreviousRandomNumbers()
+          }
+        });
+      }
+      futureNumber = fetchRandomNumber();
+    });
+  }
+
+  _addValueToPreviousRandomNumbers() async {
+    List<String> strList = previousRandomNumbers.map((i) => i.toString()).toList();
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setStringList("previousRandomNumbers", strList);
   }
 
   @override
@@ -80,13 +99,7 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-    if (futureNumber != null) {
-      futureNumber.then((value) => {
-        if (value != null) {
-          previousRandomNumbers.add(value.random)
-        }
-      });
-    }
+
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
@@ -178,7 +191,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ]
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _incrementCounter,
+        onPressed: isLoading ? null : _getNewRandomNumber,
         label: Text('New random number'),
         backgroundColor: Colors.green,
       ), // This trailing comma makes auto-formatting nicer for build methods.
