@@ -1,9 +1,9 @@
+import 'dart:core';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
-import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:university_test_1/API/api.dart';
 import 'package:university_test_1/models/API.dart';
 
@@ -13,6 +13,7 @@ void main() {
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -58,26 +59,21 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Future<RandomNumber> futureNumber = fetchRandomNumber();
-
-  var previousRandomNumbers = new List();
-
+  var previousRandomNumbers =  new List<int>();
   bool isLoading = false;
+
   void _setLoading(bool state) {
     setState(() {
       isLoading = state;
     });
   }
-  void _getNewRandomNumber() async {
-    // SharedPreferences prefs = await SharedPreferences.getInstance();
-    // List<String> savedStrList = prefs.getStringList('previousRandomNumbers');
-    // List<int> previousRandomNumbers = savedStrList.map((i) => int.parse(i)).toList();
 
+  void _getNewRandomNumber() async {
     setState(() {
       if (futureNumber != null) {
         futureNumber.then((value) => {
           if (value != null && value.random != null) {
-            previousRandomNumbers.add(value.random),
-            _addValueToPreviousRandomNumbers()
+            _addNumberToPreviousNumbers(value.random)
           }
         });
       }
@@ -85,10 +81,28 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  _addValueToPreviousRandomNumbers() async {
-    List<String> strList = previousRandomNumbers.map((i) => i.toString()).toList();
+  _addNumberToPreviousNumbers(int randomNumber) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> savedStrList = prefs.getStringList('previousRandomNumbers');
+    previousRandomNumbers = savedStrList.map((i) => int.parse(i)).toList();
+    previousRandomNumbers.add(randomNumber);
+    List<String> strList = previousRandomNumbers.map((i) => i.toString()).toList();
     prefs.setStringList("previousRandomNumbers", strList);
+  }
+
+
+  @override
+  void initState() {
+    super.initState();
+    _getPreviousNumbers();
+  }
+
+  _getPreviousNumbers() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> savedStrList = prefs.getStringList('previousRandomNumbers');
+    setState(() {
+      previousRandomNumbers = savedStrList.map((i) => int.parse(i)).toList();
+    });
   }
 
   @override
@@ -99,7 +113,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // The Flutter framework has been optimized to make rerunning build methods
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
-
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
